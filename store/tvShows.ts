@@ -28,35 +28,41 @@ export const mutations: MutationTree<TvShowsState> = {
   }
 };
 
+export const enum TvShowsActions {
+  getTvShows = '[TV SHOWS] Get Seasons Request',
+  getTvShowsSuccess = '[TV SHOWS] Get Seasons Request Success',
+  getTvShowsFailure = '[TV SHOWS] Get Seasons Request Failure',
+  getTvShowsSeasonEpisodes = '[TV SHOWS] Get Season Episodes Request',
+  getTvShowsSeasonEpisodesSuccess = '[TV SHOWS] Get Season Episodes Request Success',
+  getTvShowsSeasonEpisodesFailure = '[TV SHOWS] Get Season Episodes Request Failure'
+}
+
 export const actions: ActionTree<TvShowsState, TvShowsState> = {
-  async getTvShowsSeasons({ dispatch }, { item }) {
+  async [TvShowsActions.getTvShows]({ dispatch }, { item }) {
     try {
-      console.log('get');
       const { data } = await this.$api.tvShows.getSeasons({
         userId: this.$auth.user.Id,
         seriesId: item.Id || ''
       });
 
-      console.log(data);
-
-      dispatch('getTvShowsSeasonsSuccess', data);
+      dispatch(TvShowsActions.getTvShowsSuccess, data);
     } catch (err) {
-      dispatch('getTvShowsSeasonsFailure', err);
+      dispatch(TvShowsActions.getTvShowsFailure, err);
     }
   },
-  async getTvShowsSeasonsSuccess(
-    { dispatch },
+  [TvShowsActions.getTvShowsSuccess](
+    { dispatch, commit },
     response: BaseItemDtoQueryResult
   ) {
-    await dispatch('ADD_TVSHOW_SEASONS', {
+    commit('ADD_TVSHOW_SEASONS', {
       seasons: response.Items
     });
 
     response.Items?.forEach(async (season) => {
-      await dispatch('getTvShowsSeasonEpisodes', { season });
+      await dispatch(TvShowsActions.getTvShowsSeasonEpisodes, { season });
     });
   },
-  async getTvShowsSeasonsFailure({ dispatch }, error) {
+  [TvShowsActions.getTvShowsFailure]: async ({ dispatch }, error) => {
     await dispatch(
       'snackbar/pushSnackbarMessage',
       {
@@ -68,7 +74,7 @@ export const actions: ActionTree<TvShowsState, TvShowsState> = {
       }
     );
   },
-  async getTvShowsSeasonEpisodes({ dispatch }, { season }) {
+  async [TvShowsActions.getTvShowsSeasonEpisodes]({ dispatch }, { season }) {
     try {
       const { data } = await this.$api.items.getItems({
         userId: this.$auth.user.Id,
@@ -76,20 +82,20 @@ export const actions: ActionTree<TvShowsState, TvShowsState> = {
         fields: [ItemFields.Overview]
       });
 
-      dispatch('getTvShowsSeasonEpisodesSuccess', data);
+      dispatch(TvShowsActions.getTvShowsSeasonEpisodesSuccess, data);
     } catch (err) {
-      dispatch('getTvShowsSeasonEpisodesFailure', err);
+      dispatch(TvShowsActions.getTvShowsSeasonEpisodesFailure, err);
     }
   },
-  async getTvShowsSeasonEpisodesSuccess(
-    { dispatch },
+  [TvShowsActions.getTvShowsSeasonEpisodesSuccess](
+    { commit },
     response: BaseItemDtoQueryResult
   ) {
-    await dispatch('ADD_TVSHOW_SEASON_EPISODES', {
+    commit('ADD_TVSHOW_SEASON_EPISODES', {
       seasonEpisodes: response.Items
     });
   },
-  async getTvShowsSeasonEpisodesFailure({ dispatch }, error) {
+  async [TvShowsActions.getTvShowsSeasonEpisodesFailure]({ dispatch }, error) {
     await dispatch(
       'snackbar/pushSnackbarMessage',
       {
