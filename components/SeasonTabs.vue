@@ -35,7 +35,9 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { mapState } from 'vuex';
+import { mapState, mapActions } from 'vuex';
+import { AppState } from '~/store';
+import tvShows, { TvShowsActions } from '~/store/tvShows';
 
 export default Vue.extend({
   props: {
@@ -63,15 +65,19 @@ export default Vue.extend({
       }
     };
   },
-  computed: mapState({
-    seasons: (state) => state.tvShows.seasons,
-    seasonEpisodes: (state) => state.tvShows.seasonEpisodes
+  computed: mapState<AppState>({
+    seasons: (state: AppState) => state.tvShows.seasons,
+    seasonEpisodes: (state: AppState) => state.tvShows.seasonEpisodes
   }),
   async beforeMount() {
-    console.log(this.$store.state);
-    await this.$store.dispatch('tvShows/getTvShowSeasons', {
+    await this.getTvShows({
       item: this.item
     });
+  },
+  methods: {
+    ...mapActions(tvShows, {
+      getTvShows: TvShowsActions.getTvShows
+    })
   }
 });
 </script>
