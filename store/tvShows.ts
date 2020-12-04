@@ -1,5 +1,9 @@
 import { ActionTree, MutationTree } from 'vuex';
-import { BaseItemDto, BaseItemDtoQueryResult, ItemFields } from '~/api/models';
+import {
+  BaseItemDto,
+  BaseItemDtoQueryResult,
+  ItemFields
+} from '@jellyfin/client-axios';
 
 export interface TvShowsState {
   seasons: BaseItemDto[];
@@ -29,34 +33,28 @@ export const mutations: MutationTree<TvShowsState> = {
 };
 
 export const actions: ActionTree<TvShowsState, TvShowsState> = {
-  async getTvShowsSeasons({ dispatch }, { item }) {
+  async getTvShows({ dispatch }, { item }) {
     try {
-      console.log('get');
       const { data } = await this.$api.tvShows.getSeasons({
         userId: this.$auth.user.Id,
         seriesId: item.Id || ''
       });
 
-      console.log(data);
-
-      dispatch('getTvShowsSeasonsSuccess', data);
+      dispatch('getTvShowsSuccess', data);
     } catch (err) {
-      dispatch('getTvShowsSeasonsFailure', err);
+      dispatch('getTvShowsFailure', err);
     }
   },
-  async getTvShowsSeasonsSuccess(
-    { dispatch },
-    response: BaseItemDtoQueryResult
-  ) {
-    await dispatch('ADD_TVSHOW_SEASONS', {
+  getTvShowsSuccess({ dispatch, commit }, response: BaseItemDtoQueryResult) {
+    commit('ADD_TVSHOW_SEASONS', {
       seasons: response.Items
     });
 
-    response.Items?.forEach(async (season) => {
+    response.Items?.forEach(async (season: BaseItemDto) => {
       await dispatch('getTvShowsSeasonEpisodes', { season });
     });
   },
-  async getTvShowsSeasonsFailure({ dispatch }, error) {
+  async getTvShowsFailure({ dispatch }, error) {
     await dispatch(
       'snackbar/pushSnackbarMessage',
       {
@@ -81,11 +79,11 @@ export const actions: ActionTree<TvShowsState, TvShowsState> = {
       dispatch('getTvShowsSeasonEpisodesFailure', err);
     }
   },
-  async getTvShowsSeasonEpisodesSuccess(
-    { dispatch },
+  getTvShowsSeasonEpisodesSuccess(
+    { commit },
     response: BaseItemDtoQueryResult
   ) {
-    await dispatch('ADD_TVSHOW_SEASON_EPISODES', {
+    commit('ADD_TVSHOW_SEASON_EPISODES', {
       seasonEpisodes: response.Items
     });
   },
